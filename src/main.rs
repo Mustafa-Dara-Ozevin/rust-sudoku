@@ -1,6 +1,5 @@
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
-use std::ascii::AsciiExt;
 use std::fmt;
 
 use strum::IntoEnumIterator;
@@ -228,6 +227,7 @@ impl Sudoku {
 }
 
 fn main() {
+    println!("Welcome to Sudoku game!");
     loop{
     let mut sudoku1 = Sudoku {
         board: [Tile::Empty; 81],
