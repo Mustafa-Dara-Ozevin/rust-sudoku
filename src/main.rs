@@ -56,7 +56,7 @@ impl fmt::Display for Sudoku {
             write!(f, "|")?;
         }
         write!(f, "\n--------------------------------------\n")?;
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -67,15 +67,15 @@ impl Sudoku {
                 return Some(i);
             };
         }
-        return None;
+        None
     }
 
     fn place_tile(&mut self, tile: Tile, i: usize) -> Result<usize, &'static str> {
         if self.board[i] == Tile::Empty {
             self.board[i] = tile;
-            return Ok(i);
+            Ok(i)
         } else {
-            return Err("Tile already occupied!");
+            Err("Tile already occupied!")
         }
     }
 
@@ -83,11 +83,12 @@ impl Sudoku {
         if self.board[i] != Tile::Empty {
             let removed = self.board[i];
             self.board[i] = Tile::Empty;
-            return Ok(removed);
+            Ok(removed)
         } else {
-            return Err("Tile is already empty");
+            Err("Tile is already empty")
         }
     }
+
     fn check_legal(&self, tile: Tile, i: usize) -> bool {
         let row: usize = i / 9;
         for j in 0..9 {
@@ -111,7 +112,7 @@ impl Sudoku {
                 }
             }
         }
-        return true;
+        true
     }
 
     fn gen_legal_moves(&self, i: usize) -> Option<Vec<Tile>> {
@@ -121,10 +122,10 @@ impl Sudoku {
                 legal_moves.push(tile);
             }
         }
-        if legal_moves.len() > 0 {
-            return Some(legal_moves);
+        if !legal_moves.is_empty() {
+            Some(legal_moves)
         } else {
-            return None;
+            None
         }
     }
     fn solve(&mut self) -> bool {
@@ -144,7 +145,7 @@ impl Sudoku {
             }
             self.remove_tile(empty_tile).unwrap();
         }
-        return false;
+        false
     }
 
     fn fill_board(&mut self) -> bool {
@@ -164,19 +165,19 @@ impl Sudoku {
             }
             self.remove_tile(empty_tile).unwrap();
         }
-        return false;
+        false
     }
-    fn is_full(&self) -> bool{
-        for tile in self.board{
-            if tile == Tile::Empty{
+    fn is_full(&self) -> bool {
+        for tile in self.board {
+            if tile == Tile::Empty {
                 return false;
             }
         }
-        return true;
+        true
     }
 
-    fn check_board(&mut self) -> bool{
-      let empty_tile = match self.find_empty() {
+    fn check_board(&mut self) -> bool {
+        let empty_tile = match self.find_empty() {
             Some(num) => num,
             None => return true,
         };
@@ -187,16 +188,16 @@ impl Sudoku {
         };
         for tile in legal_moves {
             self.place_tile(tile, empty_tile).unwrap();
-            if self.is_full(){
+            if self.is_full() {
                 self.count += 1;
-                break
+                break;
             }
             if self.check_board() {
                 return true;
             }
             self.remove_tile(empty_tile).unwrap();
         }
-        return false;
+        false
     }
 
     fn gen_board(&mut self, mode: Mode) {
@@ -205,70 +206,64 @@ impl Sudoku {
             Mode::Medium => 500,
             Mode::Hard => 700,
         };
-        self.board = [Tile::Empty ; 81];
+        self.board = [Tile::Empty; 81];
         self.fill_board();
-        for _ in 0..attempts{
+        for _ in 0..attempts {
             let mut rng = rand::thread_rng();
             let cord = rng.gen_range(0..81);
-            if self.board[cord] != Tile::Empty{
+            if self.board[cord] != Tile::Empty {
                 let deleted = self.remove_tile(cord).unwrap();
-                let backup_board = self.board.clone();
+                let backup_board = self.board;
                 self.count = 0;
                 self.check_board();
                 self.board = backup_board;
-                if self.count != 1{
+                if self.count != 1 {
                     self.place_tile(deleted, cord).unwrap();
                 }
-
             }
         }
-        
     }
 }
 
 fn main() {
     println!("Welcome to Sudoku game!");
-    loop{
-    let mut sudoku1 = Sudoku {
-        board: [Tile::Empty; 81],
-        count: 0
-    };
-    let mut s = String::new();
-    println!("Please enter desired difficulty(Easy/Medium/Hard): ");
-    match std::io::stdin()
-    .read_line(&mut s){
-        Ok(s) => s,
-        Err(err) =>{
-            println!("{}",err);
-            break;
+    loop {
+        let mut sudoku1 = Sudoku {
+            board: [Tile::Empty; 81],
+            count: 0,
+        };
+        let mut s = String::new();
+        println!("Please enter desired difficulty(Easy/Medium/Hard): ");
+        match std::io::stdin().read_line(&mut s) {
+            Ok(s) => s,
+            Err(err) => {
+                println!("{}", err);
+                break;
+            }
+        };
+        let diffucilty = match s.to_lowercase().trim() {
+            "easy" => Mode::Easy,
+            "medium" => Mode::Medium,
+            "hard" => Mode::Hard,
+            _ => {
+                println!("Couldn't parse the string. restarting!");
+                return;
+            }
+        };
+        sudoku1.gen_board(diffucilty);
+        println!("{}", sudoku1);
+        println!("Type s or Solve to see the answer!");
+        let mut line = String::new();
+        match std::io::stdin().read_line(&mut line) {
+            Ok(line) => line,
+            Err(err) => {
+                println!("{}", err);
+                break;
+            }
+        };
+        if line.to_lowercase().trim() == "s" || line.to_lowercase().trim() == "solve" {
+            sudoku1.solve();
+            println!("{}", sudoku1);
         }
-    };
-    let diffucilty = match s.to_lowercase().trim(){
-        "easy" => Mode::Easy,
-        "medium" => Mode::Medium,
-        "hard" => Mode::Hard,
-        _ => {
-            println!("Couldn't parse the string. restarting!");
-            return;
-        }
-    };
-    sudoku1.gen_board(diffucilty);
-    println!("{}", sudoku1);
-    println!("Type s or Solve to see the answer!");
-    let mut line = String::new();
-     match std::io::stdin()
-    .read_line(&mut line){
-       Ok(line) => line,
-       Err(err) => {
-        println!("{}",err);
-        break;
-       }
-    };
-    if line.to_lowercase().trim() == "s" || line.to_lowercase().trim() == "solve"{
-    sudoku1.solve();
-    println!("{}", sudoku1);
     }
-
-    }
-    
 }
